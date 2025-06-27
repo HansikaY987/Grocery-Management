@@ -1,0 +1,149 @@
+/* SmartCartPro Admin CSS */
+
+/* Main layout */
+.sb-sidenav-toggled #layoutSidenav #layoutSidenav_nav {
+    transform: translateX(0);
+}
+
+.sb-sidenav-toggled #layoutSidenav #layoutSidenav_content {
+    margin-left: 0;
+}
+
+#layoutSidenav {
+    display: flex;
+}
+
+#layoutSidenav_nav {
+    flex: 0 0 225px;
+    width: 225px;
+    z-index: 1000;
+    transition: transform 0.15s ease-in-out;
+}
+
+#layoutSidenav_content {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-width: 0;
+    flex-grow: 1;
+    min-height: calc(100vh - 56px);
+    margin-left: 225px;
+    transition: margin 0.15s ease-in-out;
+}
+
+/* Sidebar */
+.sb-sidenav {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.sb-sidenav-dark {
+    background-color: #212529;
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.sb-sidenav-dark .sb-sidenav-menu {
+    padding-top: 0;
+}
+
+.sb-sidenav-dark .nav-link {
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.sb-sidenav-dark .nav-link:hover {
+    color: #fff;
+}
+
+.sb-sidenav-dark .nav-link.active {
+    color: #fff;
+    font-weight: 600;
+}
+
+.sb-sidenav-dark .sb-sidenav-menu-heading {
+    color: rgba(255, 255, 255, 0.25);
+}
+
+.sb-sidenav-menu {
+    flex-grow: 1;
+}
+
+.sb-sidenav-menu .nav {
+    flex-direction: column;
+    flex-wrap: nowrap;
+}
+
+.sb-sidenav-menu .nav-link {
+    display: flex;
+    align-items: center;
+    padding-top: 0.75rem;
+    padding-bottom: 0.75rem;
+    position: relative;
+}
+
+.sb-nav-link-icon {
+    margin-right: 0.5rem;
+}
+
+.sb-sidenav-footer {
+    padding: 0.75rem;
+    background-color: #343a40;
+}
+
+/* Dashboard cards */
+.card-body .display-6 {
+    font-size: 2rem;
+}
+
+/* Expired items highlighting */
+.table .expiring-soon {
+    background-color: rgba(255, 193, 7, 0.2);
+}
+
+.table .expired {
+    background-color: rgba(220, 53, 69, 0.2);
+}
+
+/* Charts customization */
+.chart-container {
+    position: relative;
+    min-height: 250px;
+}
+
+/* Order status badges */
+.order-status-pending {
+    background-color: #ffc107;
+}
+
+.order-status-out-for-delivery {
+    background-color: #0dcaf0;
+}
+
+.order-status-delivered {
+    background-color: #198754;
+}
+
+.order-status-cancelled {
+    background-color: #dc3545;
+}
+
+/* Date picker styling */
+.datepicker-dropdown {
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+/* Adjustments for smaller screens */
+@media (max-width: 768px) {
+    #layoutSidenav_nav {
+        transform: translateX(-225px);
+    }
+    
+    #layoutSidenav_content {
+        margin-left: 0;
+    }
+    
+    .sb-sidenav-toggled #layoutSidenav_nav {
+        transform: translateX(0);
+    }
+}
