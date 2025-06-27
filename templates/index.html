@@ -1,0 +1,219 @@
+{% extends 'base.html' %}
+
+{% block title %}SmartCartPro - AI-Powered Grocery & Pharmacy{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="hero hero-grocery">
+    <div class="hero-content">
+        <h1>Welcome to SmartCartPro</h1>
+        <p>Your AI-powered grocery and pharmacy with health insights and real-time updates.</p>
+        <a href="{{ url_for('products') }}" class="btn-primary">Start Shopping</a>
+    </div>
+</div>
+
+<!-- Featured Products Section -->
+<section>
+    <div class="section-header">
+        <h2 class="section-title">Featured Deals</h2>
+        <a href="{{ url_for('products') }}" class="section-link">View All Products</a>
+    </div>
+    
+    <div class="product-grid">
+        {% for product in featured_products %}
+            <div class="product-card" data-product-id="{{ product.id }}">
+                {% if product.category.is_pharmacy %}
+                    <span class="pharmacy-tag">Pharmacy</span>
+                {% endif %}
+                
+                <img src="{{ product.image_url or 'https://pixabay.com/get/gc9ec59946db3cdd2da251e1e2b3f51782cc7bedc7529c7e3ebd23517c7ec031c5a259b5ec335fe5948ee9fd26b45043ba5ec60d7c71ca5ad8f6950a56c11f06f_1280.jpg' }}" alt="{{ product.name }}" class="product-image">
+                
+                <div class="product-details">
+                    <h3 class="product-title">{{ product.name }}</h3>
+                    
+                    <div class="product-price">
+                        {% if product.has_discount() %}
+                            <span class="product-original-price">${{ "%.2f"|format(product.original_price) }}</span>
+                            ${{ "%.2f"|format(product.price) }}
+                            <span class="product-discount">{{ product.discount_percentage() }}% OFF</span>
+                        {% else %}
+                            ${{ "%.2f"|format(product.price) }}
+                        {% endif %}
+                    </div>
+                    
+                    {% if product.medical_warnings %}
+                        <div class="product-warning">
+                            <i data-feather="alert-triangle" class="warning-icon"></i>
+                            Medical Interactions: Click for details
+                        </div>
+                    {% endif %}
+                    
+                    <div class="product-buttons">
+                        <a href="{{ url_for('product_detail', product_id=product.id) }}" class="btn btn-secondary">View Details</a>
+                        
+                        {% if current_user.is_authenticated %}
+                            <form action="{{ url_for('add_to_cart', product_id=product.id) }}" method="post">
+                                <input type="hidden" name="quantity" value="1">
+                                <button type="submit" class="btn btn-outline">Add to Cart</button>
+                            </form>
+                        {% else %}
+                            <a href="{{ url_for('login') }}" class="btn btn-outline">Login to Buy</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            <div class="col-12 text-center">
+                <p>No featured products available at the moment. Check back soon!</p>
+            </div>
+        {% endfor %}
+    </div>
+</section>
+
+<!-- Grocery Section -->
+<section class="grocery-section">
+    <div class="section-header">
+        <h2 class="section-title">Fresh Groceries</h2>
+        <a href="{{ url_for('products') }}?pharmacy=0" class="section-link">View All Groceries</a>
+    </div>
+    
+    <div class="product-grid">
+        {% for product in grocery_products %}
+            <div class="product-card" data-product-id="{{ product.id }}">
+                <img src="{{ product.image_url or 'https://pixabay.com/get/g6870b9b92e5c71c0a9da926b37b4e9321201ea30b8619f6b7cc1d082ee88ff5cf156374d87471d1ab8463daa644ec3f8e1b99dec9276342be01973f0380e48ae_1280.jpg' }}" alt="{{ product.name }}" class="product-image">
+                
+                <div class="product-details">
+                    <h3 class="product-title">{{ product.name }}</h3>
+                    
+                    <div class="product-price">
+                        {% if product.has_discount() %}
+                            <span class="product-original-price">${{ "%.2f"|format(product.original_price) }}</span>
+                            ${{ "%.2f"|format(product.price) }}
+                            <span class="product-discount">{{ product.discount_percentage() }}% OFF</span>
+                        {% else %}
+                            ${{ "%.2f"|format(product.price) }}
+                        {% endif %}
+                    </div>
+                    
+                    <div class="product-buttons">
+                        <a href="{{ url_for('product_detail', product_id=product.id) }}" class="btn btn-secondary">View Details</a>
+                        
+                        {% if current_user.is_authenticated %}
+                            <form action="{{ url_for('add_to_cart', product_id=product.id) }}" method="post">
+                                <input type="hidden" name="quantity" value="1">
+                                <button type="submit" class="btn btn-outline">Add to Cart</button>
+                            </form>
+                        {% else %}
+                            <a href="{{ url_for('login') }}" class="btn btn-outline">Login to Buy</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            <div class="col-12 text-center">
+                <p>No grocery products available at the moment. Check back soon!</p>
+            </div>
+        {% endfor %}
+    </div>
+</section>
+
+<!-- Pharmacy Section -->
+<section class="pharmacy-section">
+    <div class="section-header">
+        <h2 class="section-title">Pharmacy & Health</h2>
+        <a href="{{ url_for('products') }}?pharmacy=1" class="section-link">View All Medicines</a>
+    </div>
+    
+    <div class="product-grid">
+        {% for product in pharmacy_products %}
+            <div class="product-card" data-product-id="{{ product.id }}">
+                <span class="pharmacy-tag">Pharmacy</span>
+                <img src="{{ product.image_url or 'https://pixabay.com/get/g644c79ce23501a1f67abe1da4d157686e95812546688dacf0279ef7b4b67b180e46e4d0576611fb7f9d660d2aa2021af3fe69479912e99de59fd258554a777fb_1280.jpg' }}" alt="{{ product.name }}" class="product-image">
+                
+                <div class="product-details">
+                    <h3 class="product-title">{{ product.name }}</h3>
+                    
+                    <div class="product-price">
+                        {% if product.has_discount() %}
+                            <span class="product-original-price">${{ "%.2f"|format(product.original_price) }}</span>
+                            ${{ "%.2f"|format(product.price) }}
+                            <span class="product-discount">{{ product.discount_percentage() }}% OFF</span>
+                        {% else %}
+                            ${{ "%.2f"|format(product.price) }}
+                        {% endif %}
+                    </div>
+                    
+                    {% if product.medical_warnings %}
+                        <div class="product-warning">
+                            <i data-feather="alert-triangle" class="warning-icon"></i>
+                            Medical Interactions: Click for details
+                        </div>
+                    {% endif %}
+                    
+                    <div class="product-buttons">
+                        <a href="{{ url_for('product_detail', product_id=product.id) }}" class="btn btn-secondary">View Details</a>
+                        
+                        {% if current_user.is_authenticated %}
+                            <form action="{{ url_for('add_to_cart', product_id=product.id) }}" method="post">
+                                <input type="hidden" name="quantity" value="1">
+                                <button type="submit" class="btn btn-outline">Add to Cart</button>
+                            </form>
+                        {% else %}
+                            <a href="{{ url_for('login') }}" class="btn btn-outline">Login to Buy</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            <div class="col-12 text-center">
+                <p>No pharmacy products available at the moment. Check back soon!</p>
+            </div>
+        {% endfor %}
+    </div>
+</section>
+
+<!-- Features Section -->
+<section class="mt-5">
+    <div class="section-header">
+        <h2 class="section-title">Why Choose SmartCartPro</h2>
+    </div>
+    
+    <div class="row mt-4">
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <i data-feather="activity" style="width: 48px; height: 48px; color: var(--secondary);"></i>
+                    </div>
+                    <h3 class="card-title">AI-Powered Health Insights</h3>
+                    <p class="card-text">Get smart medication interaction warnings and health recommendations powered by Gemini AI.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <i data-feather="bell" style="width: 48px; height: 48px; color: var(--secondary);"></i>
+                    </div>
+                    <h3 class="card-title">Real-Time Updates</h3>
+                    <p class="card-text">Get SMS notifications about your orders and instant alerts for new discounts on your favorite products.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <i data-feather="truck" style="width: 48px; height: 48px; color: var(--secondary);"></i>
+                    </div>
+                    <h3 class="card-title">Smart Delivery Tracking</h3>
+                    <p class="card-text">Track your orders in real-time and get accurate delivery estimates with our smart logistics system.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
