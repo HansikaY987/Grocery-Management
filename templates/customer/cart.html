@@ -1,0 +1,185 @@
+{% extends 'base.html' %}
+
+{% block title %}Shopping Cart - SmartCartPro{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <h1 class="mb-4">Your Shopping Cart</h1>
+    
+    {% if cart_items %}
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="cart-container">
+                    <div class="cart-header">
+                        <h2 class="cart-title">Cart Items ({{ cart_items|length }})</h2>
+                        
+                        <!-- Medical Interaction Check Button -->
+                        <button id="cart-medical-check" class="btn btn-outline-info" type="button">
+                            <i data-feather="activity"></i> Check Medical Interactions
+                        </button>
+                    </div>
+                    
+                    <!-- Medical interaction alert area -->
+                    <div id="medical-alerts" class="mb-4"></div>
+                    
+                    <!-- Cart Items -->
+                    {% for item in cart_items %}
+                        <div class="cart-item" data-product-id="{{ item.product.id }}" data-price="{{ item.product.price }}">
+                            <img src="{{ item.product.image_url or 'https://pixabay.com/get/gc9ec59946db3cdd2da251e1e2b3f51782cc7bedc7529c7e3ebd23517c7ec031c5a259b5ec335fe5948ee9fd26b45043ba5ec60d7c71ca5ad8f6950a56c11f06f_1280.jpg' if not item.product.category.is_pharmacy else 'https://pixabay.com/get/g644c79ce23501a1f67abe1da4d157686e95812546688dacf0279ef7b4b67b180e46e4d0576611fb7f9d660d2aa2021af3fe69479912e99de59fd258554a777fb_1280.jpg' }}" 
+                                 alt="{{ item.product.name }}" class="cart-item-image">
+                            
+                            <div class="cart-item-details">
+                                <h3>{{ item.product.name }}</h3>
+                                {% if item.product.category.is_pharmacy %}
+                                    <span class="badge bg-success">Pharmacy</span>
+                                {% endif %}
+                                {% if item.product.medical_warnings %}
+                                    <span class="badge bg-warning text-dark">Medical Info</span>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="cart-item-price">${{ "%.2f"|format(item.product.price) }}</div>
+                            
+                            <div class="cart-item-quantity">
+                                <form action="{{ url_for('update_cart_item', item_id=item.id) }}" method="post">
+                                    <div class="input-group">
+                                        <button type="button" class="quantity-btn quantity-btn-decrease">-</button>
+                                        <input type="number" name="quantity" class="quantity-input" value="{{ item.quantity }}" min="1" max="{{ item.product.stock }}" data-max-stock="{{ item.product.stock }}">
+                                        <button type="button" class="quantity-btn quantity-btn-increase">+</button>
+                                        <button type="submit" class="btn btn-sm btn-outline-secondary">Update</button>
+                                    </div>
+                                </form>
+                            </div>
+                            
+                            <div class="cart-item-subtotal">${{ "%.2f"|format(item.total_price()) }}</div>
+                            
+                            <form id="remove-form-{{ item.id }}" action="{{ url_for('remove_from_cart', item_id=item.id) }}" method="post">
+                                <button type="button" class="cart-item-remove" onclick="confirmRemoveItem({{ item.id }})">
+                                    <i data-feather="trash-2"></i>
+                                </button>
+                            </form>
+                        </div>
+                    {% endfor %}
+                    
+                    <div class="cart-summary">
+                        <div class="cart-row">
+                            <span>Subtotal:</span>
+                            <span id="cart-subtotal">${{ "%.2f"|format(total) }}</span>
+                        </div>
+                        
+                        {% if coupon %}
+                            <div class="cart-row">
+                                <span>Discount:</span>
+                                <span id="cart-discount" data-value="{{ (total * coupon.discount_percentage / 100)|float }}" class="text-success">-${{ "%.2f"|format(total * coupon.discount_percentage / 100) }}</span>
+                            </div>
+                        {% endif %}
+                        
+                        <div class="cart-row total">
+                            <span>Total:</span>
+                            <span id="cart-total">${{ "%.2f"|format(total - (total * coupon.discount_percentage / 100 if session.get('applied_coupon') else 0)) }}</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="cart-actions">
+                    <a href="{{ url_for('products') }}" class="btn btn-outline-secondary">
+                        <i data-feather="arrow-left"></i> Continue Shopping
+                    </a>
+                    
+                    <form action="{{ url_for('view_cart') }}" method="post" id="clear-cart-form">
+                        <input type="hidden" name="_method" value="DELETE">
+                        <button type="button" class="btn btn-outline-danger" onclick="if(confirm('Are you sure you want to empty your cart?')) this.form.submit();">
+                            <i data-feather="trash"></i> Clear Cart
+                        </button>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="col-lg-4">
+                <!-- Coupon Code -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Apply Coupon</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="coupon-form" action="{{ url_for('checkout') }}" method="post">
+                            <div class="input-group mb-3">
+                                <input type="text" name="coupon_code" class="form-control" placeholder="Enter coupon code">
+                                <button class="btn btn-outline-secondary" type="submit">Apply</button>
+                            </div>
+                        </form>
+                        <div id="coupon-result"></div>
+                        
+                        {% if coupons %}
+                            <div class="mt-3">
+                                <h6>Available Coupons:</h6>
+                                <ul class="list-group">
+                                    {% for coupon in coupons %}
+                                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <strong>{{ coupon.code }}</strong>
+                                                <div><small>{{ coupon.discount_percentage }}% off on orders over ${{ "%.2f"|format(coupon.min_purchase) }}</small></div>
+                                            </div>
+                                            <span class="badge bg-primary rounded-pill">{{ coupon.discount_percentage }}%</span>
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Order Summary -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Order Summary</h5>
+                    </div>
+                    <div class="card-body">
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <span>Subtotal:</span>
+                                <span>${{ "%.2f"|format(total) }}</span>
+                            </li>
+                            {% if session.get('applied_coupon') %}
+                                <li class="list-group-item d-flex justify-content-between align-items-center text-success">
+                                    <span>Discount:</span>
+                                    <span>-${{ "%.2f"|format(total * coupon.discount_percentage / 100) }}</span>
+                                </li>
+                            {% endif %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <span>Shipping:</span>
+                                <span>Free</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center fw-bold">
+                                <span>Total:</span>
+                                <span>${{ "%.2f"|format(total - (total * coupon.discount_percentage / 100 if session.get('applied_coupon') else 0)) }}</span>
+                            </li>
+                        </ul>
+                        
+                        <div class="d-grid gap-2 mt-3">
+                            <a href="{{ url_for('checkout') }}" class="btn btn-primary btn-lg">
+                                Proceed to Checkout
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <div class="text-center py-5">
+            <div style="font-size: 4rem; color: var(--secondary); margin-bottom: 2rem;">
+                <i data-feather="shopping-cart" style="width: 64px; height: 64px;"></i>
+            </div>
+            <h2 class="mb-4">Your cart is empty!</h2>
+            <p class="mb-4">Looks like you haven't added any products to your cart yet.</p>
+            <a href="{{ url_for('products') }}" class="btn btn-primary btn-lg">
+                <i data-feather="shopping-bag"></i> Browse Products
+            </a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/cart.js') }}"></script>
+{% endblock %}

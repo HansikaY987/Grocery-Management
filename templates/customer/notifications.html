@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+
+{% block title %}Notifications - SmartCartPro{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <h1 class="mb-4">Your Notifications</h1>
+    
+    {% if notifications %}
+        <div class="card">
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    {% for notification in notifications %}
+                        <div class="list-group-item {% if not notification.read %}notification-unread{% endif %}">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h5 class="mb-1">
+                                    {% if 'order' in notification.message.lower() %}
+                                        <i data-feather="package" class="text-primary"></i>
+                                    {% elif 'discount' in notification.message.lower() or 'sale' in notification.message.lower() %}
+                                        <i data-feather="tag" class="text-danger"></i>
+                                    {% elif 'welcome' in notification.message.lower() %}
+                                        <i data-feather="user-plus" class="text-success"></i>
+                                    {% else %}
+                                        <i data-feather="bell" class="text-secondary"></i>
+                                    {% endif %}
+                                    <span class="ms-2">
+                                        {% if 'order' in notification.message.lower() %}
+                                            Order Update
+                                        {% elif 'discount' in notification.message.lower() or 'sale' in notification.message.lower() %}
+                                            Price Drop Alert
+                                        {% elif 'welcome' in notification.message.lower() %}
+                                            Welcome
+                                        {% else %}
+                                            Notification
+                                        {% endif %}
+                                    </span>
+                                </h5>
+                                <small class="text-muted">{{ notification.created_at.strftime('%b %d, %Y at %I:%M %p') }}</small>
+                            </div>
+                            <p class="mb-1">{{ notification.message }}</p>
+                            
+                            {% if not notification.read %}
+                                <div class="mt-2">
+                                    <span class="badge bg-primary">New</span>
+                                </div>
+                            {% endif %}
+                            
+                            <!-- Check if message contains order info -->
+                            {% if 'order #' in notification.message.lower() %}
+                                <div class="mt-2">
+                                    <a href="{{ url_for('orders') }}" class="btn btn-sm btn-outline-primary">
+                                        View Orders
+                                    </a>
+                                </div>
+                            {% endif %}
+                            
+                            <!-- Parse product name if present in the message -->
+                            {% if 'sale' in notification.message.lower() %}
+                                <div class="mt-2">
+                                    <a href="{{ url_for('products') }}" class="btn btn-sm btn-outline-danger">
+                                        View Sale Items
+                                    </a>
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <div class="text-center py-5">
+            <div style="font-size: 4rem; color: var(--secondary); margin-bottom: 2rem;">
+                <i data-feather="bell" style="width: 64px; height: 64px;"></i>
+            </div>
+            <h2 class="mb-4">No notifications yet!</h2>
+            <p class="mb-4">You don't have any notifications at the moment. We'll notify you about orders, discounts, and other important updates.</p>
+            <a href="{{ url_for('products') }}" class="btn btn-primary btn-lg">
+                <i data-feather="shopping-bag"></i> Browse Products
+            </a>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Custom filter for regex search -->
+<script>
+    // This is a simple regex filter implementation for Jinja
+    // In a real application, this would be server-side in Python
+    function regexSearch(str, pattern, group) {
+        const regex = new RegExp(pattern);
+        const match = regex.exec(str);
+        return match ? match[group] : null;
+    }
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize Feather icons
+        feather.replace();
+    });
+</script>
+{% endblock %}

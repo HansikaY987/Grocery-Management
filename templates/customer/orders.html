@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+
+{% block title %}My Orders - SmartCartPro{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <h1 class="mb-4">My Orders</h1>
+    
+    {% if user_orders %}
+        <div class="card">
+            <div class="card-header bg-light">
+                <div class="row">
+                    <div class="col-md-2"><strong>Order #</strong></div>
+                    <div class="col-md-2"><strong>Date</strong></div>
+                    <div class="col-md-2"><strong>Amount</strong></div>
+                    <div class="col-md-2"><strong>Status</strong></div>
+                    <div class="col-md-4"><strong>Actions</strong></div>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                {% for order in user_orders %}
+                    <div class="row border-bottom p-3 {% if loop.last %}border-bottom-0{% endif %}" data-order-id="{{ order.id }}">
+                        <div class="col-md-2">
+                            <a href="{{ url_for('order_detail', order_id=order.id) }}" class="fw-bold text-decoration-none">
+                                #{{ order.id }}
+                            </a>
+                        </div>
+                        <div class="col-md-2">
+                            {{ order.created_at.strftime('%b %d, %Y') }}
+                        </div>
+                        <div class="col-md-2">
+                            ${{ "%.2f"|format(order.total_amount) }}
+                        </div>
+                        <div class="col-md-2">
+                            {% if order.status == 'pending' %}
+                                <span class="badge bg-warning">Pending</span>
+                            {% elif order.status == 'out_for_delivery' %}
+                                <span class="badge bg-primary">Out for Delivery</span>
+                            {% elif order.status == 'delivered' %}
+                                <span class="badge bg-success">Delivered</span>
+                            {% elif order.status == 'cancelled' %}
+                                <span class="badge bg-danger">Cancelled</span>
+                            {% else %}
+                                <span class="badge bg-secondary">{{ order.status }}</span>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-4">
+                            <div class="d-flex gap-2 flex-wrap">
+                                <a href="{{ url_for('order_detail', order_id=order.id) }}" class="btn btn-sm btn-outline-primary">
+                                    <i data-feather="eye" class="feather-sm"></i> View Details
+                                </a>
+                                <a href="{{ url_for('view_invoice', order_id=order.id) }}" class="btn btn-sm btn-outline-secondary">
+                                    <i data-feather="file-text" class="feather-sm"></i> Invoice
+                                </a>
+                                <form action="{{ url_for('reorder', order_id=order.id) }}" method="post" class="d-inline">
+                                    <button type="submit" class="btn btn-sm btn-outline-success">
+                                        <i data-feather="refresh-cw" class="feather-sm"></i> Reorder
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% else %}
+        <div class="text-center py-5">
+            <div style="font-size: 4rem; color: var(--secondary); margin-bottom: 2rem;">
+                <i data-feather="package" style="width: 64px; height: 64px;"></i>
+            </div>
+            <h2 class="mb-4">No orders yet!</h2>
+            <p class="mb-4">You haven't placed any orders yet. Start shopping to see your orders here.</p>
+            <a href="{{ url_for('products') }}" class="btn btn-primary btn-lg">
+                <i data-feather="shopping-bag"></i> Browse Products
+            </a>
+        </div>
+    {% endif %}
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Replace all feather icons
+        feather.replace({
+            'class': 'feather-sm',
+            'width': 16,
+            'height': 16
+        });
+    });
+</script>
+{% endblock %}

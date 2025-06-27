@@ -1,0 +1,210 @@
+{% extends 'base.html' %}
+
+{% block title %}Order Confirmed - SmartCartPro{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="text-center mb-5">
+        <div class="success-icon mb-4">
+            <i data-feather="check-circle" style="width: 80px; height: 80px; color: var(--success);"></i>
+        </div>
+        <h1 class="display-4">Order Confirmed!</h1>
+        <p class="lead">Thank you for your order. Your order has been received and is being processed.</p>
+    </div>
+    
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h3 class="mb-0">Order #{{ order.id }}</h3>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5>Order Summary</h5>
+                            <p><strong>Order Date:</strong> {{ order.created_at.strftime('%B %d, %Y') }}</p>
+                            <p><strong>Order Status:</strong> 
+                                <span class="badge bg-warning">Pending</span>
+                            </p>
+                            <p><strong>Total Amount:</strong> ${{ "%.2f"|format(order.total_amount) }}</p>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <h5>Delivery Information</h5>
+                            <p><strong>Delivery Address:</strong><br>
+                                {{ order.delivery_address|replace('\n', '<br>')|safe }}
+                            </p>
+                            <p><strong>Phone:</strong> {{ current_user.phone or 'Not provided' }}</p>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    
+                    <h5>Order Items</h5>
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Product</th>
+                                    <th class="text-end">Price</th>
+                                    <th class="text-end">Quantity</th>
+                                    <th class="text-end">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in order.items %}
+                                    <tr>
+                                        <td>{{ item.product.name }}</td>
+                                        <td class="text-end">${{ "%.2f"|format(item.price) }}</td>
+                                        <td class="text-end">{{ item.quantity }}</td>
+                                        <td class="text-end">${{ "%.2f"|format(item.price * item.quantity) }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <td colspan="3" class="text-end"><strong>Total:</strong></td>
+                                    <td class="text-end"><strong>${{ "%.2f"|format(order.total_amount) }}</strong></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h4 class="card-title">What Happens Next?</h4>
+                    <div class="order-steps">
+                        <div class="step active">
+                            <div class="step-icon">
+                                <i data-feather="check-circle" style="color: var(--success);"></i>
+                            </div>
+                            <div class="step-content">
+                                <h5>Order Confirmed</h5>
+                                <p>Your order has been placed and is now being processed.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="step">
+                            <div class="step-icon">
+                                <i data-feather="package"></i>
+                            </div>
+                            <div class="step-content">
+                                <h5>Order Processing</h5>
+                                <p>We're preparing your items for shipment.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="step">
+                            <div class="step-icon">
+                                <i data-feather="truck"></i>
+                            </div>
+                            <div class="step-content">
+                                <h5>Out for Delivery</h5>
+                                <p>Your order is on its way to you!</p>
+                            </div>
+                        </div>
+                        
+                        <div class="step">
+                            <div class="step-icon">
+                                <i data-feather="home"></i>
+                            </div>
+                            <div class="step-content">
+                                <h5>Delivered</h5>
+                                <p>Your order has been delivered. Enjoy!</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="text-center">
+                <a href="{{ url_for('view_invoice', order_id=order.id) }}" class="btn btn-primary me-2">
+                    <i data-feather="file-text"></i> View Invoice
+                </a>
+                <a href="{{ url_for('orders') }}" class="btn btn-outline-secondary me-2">
+                    <i data-feather="list"></i> My Orders
+                </a>
+                <a href="{{ url_for('products') }}" class="btn btn-outline-success">
+                    <i data-feather="shopping-bag"></i> Continue Shopping
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .order-steps {
+        position: relative;
+        padding-left: 60px;
+    }
+    
+    .step {
+        position: relative;
+        padding-bottom: 30px;
+    }
+    
+    .step:last-child {
+        padding-bottom: 0;
+    }
+    
+    .step:before {
+        content: '';
+        position: absolute;
+        left: -30px;
+        top: 30px;
+        bottom: 0;
+        width: 2px;
+        background-color: #ddd;
+    }
+    
+    .step:last-child:before {
+        display: none;
+    }
+    
+    .step-icon {
+        position: absolute;
+        left: -45px;
+        top: 0;
+        width: 30px;
+        height: 30px;
+        background-color: #f8f9fa;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1;
+    }
+    
+    .step.active .step-icon {
+        background-color: #e8f5e9;
+    }
+    
+    .success-icon {
+        animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+        0% {
+            transform: scale(1);
+            opacity: 1;
+        }
+        50% {
+            transform: scale(1.1);
+            opacity: 0.8;
+        }
+        100% {
+            transform: scale(1);
+            opacity: 1;
+        }
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize Feather icons
+        feather.replace();
+    });
+</script>
+{% endblock %}

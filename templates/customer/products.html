@@ -1,0 +1,249 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    {% if is_pharmacy %}
+        Pharmacy - SmartCartPro
+    {% elif current_category %}
+        {{ categories|selectattr('id', 'equalto', current_category)|first|attr('name') }} - SmartCartPro
+    {% else %}
+        All Products - SmartCartPro
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+<!-- Hero Banner -->
+{% if is_pharmacy %}
+<div class="hero hero-pharmacy">
+    <div class="hero-content">
+        <h1>Pharmacy & Healthcare</h1>
+        <p>Quality medicines and healthcare products with AI-powered health insights</p>
+    </div>
+</div>
+{% elif is_pharmacy == 0 %}
+<div class="hero hero-grocery">
+    <div class="hero-content">
+        <h1>Groceries & Fresh Products</h1>
+        <p>Quality fresh products, pantry essentials, and household items</p>
+    </div>
+</div>
+{% else %}
+<div class="hero" style="background: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url('https://pixabay.com/get/g0354303fec6748cfa504f0ccaeab54badf5b9333bb494f8dac7351311ea11406d97b95e3d2dbc7b2d0f5fa9576c6ae63d5a6d00779a1c27adbe65faa6114a1a1_1280.jpg'); background-size: cover; background-position: center;">
+    <div class="hero-content">
+        <h1>Browse All Products</h1>
+        <p>Discover our full range of grocery and pharmacy products</p>
+    </div>
+</div>
+{% endif %}
+
+<div class="container-fluid mt-4">
+    <div class="row">
+        <!-- Filters Sidebar -->
+        <div class="col-md-3">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Filters</h5>
+                </div>
+                <div class="card-body">
+                    <!-- Search -->
+                    <div class="mb-4">
+                        <h6>Search</h6>
+                        <form action="{{ url_for('products') }}" method="get">
+                            {% if current_category %}
+                                <input type="hidden" name="category" value="{{ current_category }}">
+                            {% endif %}
+                            {% if is_pharmacy is not none %}
+                                <input type="hidden" name="pharmacy" value="{{ is_pharmacy }}">
+                            {% endif %}
+                            {% if sort_by %}
+                                <input type="hidden" name="sort" value="{{ sort_by }}">
+                            {% endif %}
+                            <div class="input-group">
+                                <input type="text" name="q" class="form-control" placeholder="Search products..." value="{{ search_query }}">
+                                <button class="btn btn-outline-secondary" type="submit">
+                                    <i data-feather="search"></i>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                    
+                    <!-- Categories -->
+                    <div class="mb-4">
+                        <h6>Categories</h6>
+                        <div class="list-group">
+                            <a href="{{ url_for('products', q=search_query, sort=sort_by, pharmacy=is_pharmacy) }}" 
+                               class="list-group-item list-group-item-action {% if not current_category %}active{% endif %}">
+                                All Categories
+                            </a>
+                            
+                            {% for category in categories %}
+                                {% if is_pharmacy is none or category.is_pharmacy == is_pharmacy %}
+                                    <a href="{{ url_for('products', category=category.id, q=search_query, sort=sort_by, pharmacy=is_pharmacy) }}" 
+                                       class="list-group-item list-group-item-action {% if current_category == category.id %}active{% endif %}">
+                                        {{ category.name }}
+                                    </a>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <!-- Type Filter -->
+                    <div class="mb-4">
+                        <h6>Product Type</h6>
+                        <div class="list-group">
+                            <a href="{{ url_for('products', category=current_category, q=search_query, sort=sort_by) }}" 
+                               class="list-group-item list-group-item-action {% if is_pharmacy is none %}active{% endif %}">
+                                All Products
+                            </a>
+                            <a href="{{ url_for('products', category=current_category, q=search_query, sort=sort_by, pharmacy=0) }}" 
+                               class="list-group-item list-group-item-action {% if is_pharmacy == 0 %}active{% endif %}">
+                                Groceries
+                            </a>
+                            <a href="{{ url_for('products', category=current_category, q=search_query, sort=sort_by, pharmacy=1) }}" 
+                               class="list-group-item list-group-item-action {% if is_pharmacy == 1 %}active{% endif %}">
+                                Pharmacy
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <!-- Sort Options -->
+                    <div>
+                        <h6>Sort By</h6>
+                        <div class="list-group">
+                            <a href="{{ url_for('products', category=current_category, q=search_query, sort='name', pharmacy=is_pharmacy) }}" 
+                               class="list-group-item list-group-item-action {% if sort_by == 'name' or not sort_by %}active{% endif %}">
+                                Name (A-Z)
+                            </a>
+                            <a href="{{ url_for('products', category=current_category, q=search_query, sort='price_low', pharmacy=is_pharmacy) }}" 
+                               class="list-group-item list-group-item-action {% if sort_by == 'price_low' %}active{% endif %}">
+                                Price: Low to High
+                            </a>
+                            <a href="{{ url_for('products', category=current_category, q=search_query, sort='price_high', pharmacy=is_pharmacy) }}" 
+                               class="list-group-item list-group-item-action {% if sort_by == 'price_high' %}active{% endif %}">
+                                Price: High to Low
+                            </a>
+                            <a href="{{ url_for('products', category=current_category, q=search_query, sort='newest', pharmacy=is_pharmacy) }}" 
+                               class="list-group-item list-group-item-action {% if sort_by == 'newest' %}active{% endif %}">
+                                Newest First
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Products Grid -->
+        <div class="col-md-9">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h3>
+                    {% if search_query %}
+                        Search Results for "{{ search_query }}"
+                    {% elif current_category %}
+                        {{ categories|selectattr('id', 'equalto', current_category)|first|attr('name') }}
+                    {% elif is_pharmacy == 1 %}
+                        Pharmacy Products
+                    {% elif is_pharmacy == 0 %}
+                        Grocery Products
+                    {% else %}
+                        All Products
+                    {% endif %}
+                </h3>
+                
+                <span>{{ products.total }} products found</span>
+            </div>
+            
+            {% if products.items %}
+                <div class="product-grid">
+                    {% for product in products.items %}
+                        <div class="product-card" data-product-id="{{ product.id }}">
+                            {% if product.category.is_pharmacy %}
+                                <span class="pharmacy-tag">Pharmacy</span>
+                            {% endif %}
+                            
+                            <img src="{{ product.image_url or 'https://pixabay.com/get/gc9ec59946db3cdd2da251e1e2b3f51782cc7bedc7529c7e3ebd23517c7ec031c5a259b5ec335fe5948ee9fd26b45043ba5ec60d7c71ca5ad8f6950a56c11f06f_1280.jpg' if not product.category.is_pharmacy else 'https://pixabay.com/get/g644c79ce23501a1f67abe1da4d157686e95812546688dacf0279ef7b4b67b180e46e4d0576611fb7f9d660d2aa2021af3fe69479912e99de59fd258554a777fb_1280.jpg' }}" 
+                                 alt="{{ product.name }}" class="product-image">
+                            
+                            <div class="product-details">
+                                <h3 class="product-title">{{ product.name }}</h3>
+                                
+                                <div class="product-price">
+                                    {% if product.has_discount() %}
+                                        <span class="product-original-price">${{ "%.2f"|format(product.original_price) }}</span>
+                                        ${{ "%.2f"|format(product.price) }}
+                                        <span class="product-discount">{{ product.discount_percentage() }}% OFF</span>
+                                    {% else %}
+                                        ${{ "%.2f"|format(product.price) }}
+                                    {% endif %}
+                                </div>
+                                
+                                {% if product.stock <= 5 and product.stock > 0 %}
+                                    <div class="text-warning mt-1 mb-2">
+                                        <small><i data-feather="alert-circle" style="width: 14px; height: 14px;"></i> Only {{ product.stock }} left</small>
+                                    </div>
+                                {% elif product.stock <= 0 %}
+                                    <div class="text-danger mt-1 mb-2">
+                                        <small><i data-feather="x-circle" style="width: 14px; height: 14px;"></i> Out of Stock</small>
+                                    </div>
+                                {% endif %}
+                                
+                                {% if product.medical_warnings %}
+                                    <div class="product-warning">
+                                        <i data-feather="alert-triangle" class="warning-icon"></i>
+                                        Medical Interactions: Click for details
+                                    </div>
+                                {% endif %}
+                                
+                                <div class="product-buttons">
+                                    <a href="{{ url_for('product_detail', product_id=product.id) }}" class="btn btn-secondary">View Details</a>
+                                    
+                                    {% if current_user.is_authenticated and product.stock > 0 %}
+                                        <form action="{{ url_for('add_to_cart', product_id=product.id) }}" method="post">
+                                            <input type="hidden" name="quantity" value="1">
+                                            <button type="submit" class="btn btn-outline">Add to Cart</button>
+                                        </form>
+                                    {% elif current_user.is_authenticated and product.stock <= 0 %}
+                                        <button class="btn btn-outline" disabled>Out of Stock</button>
+                                    {% else %}
+                                        <a href="{{ url_for('login') }}" class="btn btn-outline">Login to Buy</a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+                
+                <!-- Pagination -->
+                {% if products.pages > 1 %}
+                    <nav aria-label="Page navigation" class="mt-4">
+                        <ul class="pagination justify-content-center">
+                            {% for page_num in products.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+                                {% if page_num %}
+                                    <li class="page-item {% if page_num == products.page %}active{% endif %}">
+                                        <a class="page-link" href="{{ url_for('products', page=page_num, category=current_category, q=search_query, sort=sort_by, pharmacy=is_pharmacy) }}">
+                                            {{ page_num }}
+                                        </a>
+                                    </li>
+                                {% else %}
+                                    <li class="page-item disabled">
+                                        <span class="page-link">...</span>
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+                        </ul>
+                    </nav>
+                {% endif %}
+            {% else %}
+                <div class="alert alert-info">
+                    <h4 class="alert-heading">No products found!</h4>
+                    <p>
+                        We couldn't find any products matching your criteria. Try adjusting your filters or search query.
+                    </p>
+                    <hr>
+                    <p class="mb-0">
+                        <a href="{{ url_for('products') }}" class="alert-link">View all products</a>
+                    </p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

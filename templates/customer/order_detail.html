@@ -1,0 +1,252 @@
+{% extends 'base.html' %}
+
+{% block title %}Order #{{ order.id }} - SmartCartPro{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Order #{{ order.id }}</h1>
+        <div>
+            <a href="{{ url_for('view_invoice', order_id=order.id) }}" class="btn btn-primary">
+                <i data-feather="file-text"></i> View Invoice
+            </a>
+            <a href="{{ url_for('orders') }}" class="btn btn-outline-secondary ms-2">
+                <i data-feather="arrow-left"></i> Back to Orders
+            </a>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- Order Details -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h3 class="mb-0">Order Details</h3>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <h5>Order Information</h5>
+                            <p><strong>Order Date:</strong> {{ order.created_at.strftime('%B %d, %Y at %I:%M %p') }}</p>
+                            <p><strong>Order Status:</strong> 
+                                {% if order.status == 'pending' %}
+                                    <span class="badge bg-warning">Pending</span>
+                                {% elif order.status == 'out_for_delivery' %}
+                                    <span class="badge bg-primary">Out for Delivery</span>
+                                {% elif order.status == 'delivered' %}
+                                    <span class="badge bg-success">Delivered</span>
+                                {% elif order.status == 'cancelled' %}
+                                    <span class="badge bg-danger">Cancelled</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">{{ order.status|title }}</span>
+                                {% endif %}
+                            </p>
+                            <p><strong>Payment Method:</strong> Cash on Delivery</p>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <h5>Delivery Information</h5>
+                            <p><strong>Delivery Address:</strong><br>
+                                {{ order.delivery_address|replace('\n', '<br>')|safe }}
+                            </p>
+                            {% if order.delivery_latitude and order.delivery_longitude %}
+                                <div class="mt-2">
+                                    <a href="https://www.google.com/maps?q={{ order.delivery_latitude }},{{ order.delivery_longitude }}" 
+                                       class="btn btn-sm btn-outline-secondary" target="_blank">
+                                        <i data-feather="map-pin"></i> View on Map
+                                    </a>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Order Items -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h3 class="mb-0">Order Items</h3>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Product</th>
+                                    <th>Category</th>
+                                    <th class="text-end">Price</th>
+                                    <th class="text-end">Quantity</th>
+                                    <th class="text-end">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in order.items %}
+                                    <tr>
+                                        <td>
+                                            <a href="{{ url_for('product_detail', product_id=item.product.id) }}" class="text-decoration-none">
+                                                {{ item.product.name }}
+                                            </a>
+                                        </td>
+                                        <td>{{ item.product.category.name }}</td>
+                                        <td class="text-end">${{ "%.2f"|format(item.price) }}</td>
+                                        <td class="text-end">{{ item.quantity }}</td>
+                                        <td class="text-end">${{ "%.2f"|format(item.price * item.quantity) }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <td colspan="4" class="text-end"><strong>Subtotal:</strong></td>
+                                    <td class="text-end">${{ "%.2f"|format(order.total_amount) }}</td>
+                                </tr>
+                                <tr>
+                                    <td colspan="4" class="text-end"><strong>Shipping:</strong></td>
+                                    <td class="text-end">Free</td>
+                                </tr>
+                                <tr>
+                                    <td colspan="4" class="text-end"><strong>Total:</strong></td>
+                                    <td class="text-end"><strong>${{ "%.2f"|format(order.total_amount) }}</strong></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Reorder Button -->
+            <div class="text-center">
+                <form action="{{ url_for('reorder', order_id=order.id) }}" method="post" class="d-inline">
+                    <button type="submit" class="btn btn-success">
+                        <i data-feather="refresh-cw"></i> Reorder All Items
+                    </button>
+                </form>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <!-- Order Summary -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h3 class="mb-0">Order Summary</h3>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Subtotal:</span>
+                        <span>${{ "%.2f"|format(order.total_amount) }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Shipping:</span>
+                        <span>Free</span>
+                    </div>
+                    <hr>
+                    <div class="d-flex justify-content-between fw-bold">
+                        <span>Total:</span>
+                        <span>${{ "%.2f"|format(order.total_amount) }}</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Order Timeline -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="mb-0">Order Timeline</h3>
+                </div>
+                <div class="card-body p-0">
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item">
+                            <div class="d-flex">
+                                <div class="timeline-icon active">
+                                    <i data-feather="check-circle"></i>
+                                </div>
+                                <div class="ms-3">
+                                    <h5 class="mb-1">Order Placed</h5>
+                                    <p class="mb-0 text-muted small">{{ order.created_at.strftime('%B %d, %Y at %I:%M %p') }}</p>
+                                </div>
+                            </div>
+                        </li>
+                        
+                        <li class="list-group-item">
+                            <div class="d-flex">
+                                <div class="timeline-icon {% if order.status != 'pending' %}active{% endif %}">
+                                    <i data-feather="package"></i>
+                                </div>
+                                <div class="ms-3">
+                                    <h5 class="mb-1">Order Processing</h5>
+                                    <p class="mb-0 text-muted small">
+                                        {% if order.status != 'pending' %}
+                                            {{ (order.updated_at - timedelta(hours=2)).strftime('%B %d, %Y at %I:%M %p') }}
+                                        {% else %}
+                                            Waiting for processing
+                                        {% endif %}
+                                    </p>
+                                </div>
+                            </div>
+                        </li>
+                        
+                        <li class="list-group-item">
+                            <div class="d-flex">
+                                <div class="timeline-icon {% if order.status == 'out_for_delivery' or order.status == 'delivered' %}active{% endif %}">
+                                    <i data-feather="truck"></i>
+                                </div>
+                                <div class="ms-3">
+                                    <h5 class="mb-1">Out for Delivery</h5>
+                                    <p class="mb-0 text-muted small">
+                                        {% if order.status == 'out_for_delivery' or order.status == 'delivered' %}
+                                            {{ (order.updated_at - timedelta(hours=1)).strftime('%B %d, %Y at %I:%M %p') }}
+                                        {% else %}
+                                            Not yet shipped
+                                        {% endif %}
+                                    </p>
+                                </div>
+                            </div>
+                        </li>
+                        
+                        <li class="list-group-item">
+                            <div class="d-flex">
+                                <div class="timeline-icon {% if order.status == 'delivered' %}active{% endif %}">
+                                    <i data-feather="home"></i>
+                                </div>
+                                <div class="ms-3">
+                                    <h5 class="mb-1">Delivered</h5>
+                                    <p class="mb-0 text-muted small">
+                                        {% if order.status == 'delivered' %}
+                                            {{ order.updated_at.strftime('%B %d, %Y at %I:%M %p') }}
+                                        {% else %}
+                                            Pending delivery
+                                        {% endif %}
+                                    </p>
+                                </div>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .timeline-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background-color: #f8f9fa;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #adb5bd;
+    }
+    
+    .timeline-icon.active {
+        background-color: #e8f5e9;
+        color: var(--success);
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize Feather icons
+        feather.replace();
+    });
+</script>
+{% endblock %}

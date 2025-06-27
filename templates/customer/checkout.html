@@ -1,0 +1,141 @@
+{% extends 'base.html' %}
+
+{% block title %}Checkout - SmartCartPro{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <h1 class="mb-4">Checkout</h1>
+    
+    <div class="checkout-container">
+        <!-- Checkout Form -->
+        <div class="checkout-form">
+            <form method="POST" action="{{ url_for('checkout') }}">
+                {{ form.hidden_tag() }}
+                
+                <h3 class="mb-3">Delivery Information</h3>
+                
+                <div class="form-group mb-3">
+                    <label for="address" class="form-label">Delivery Address</label>
+                    {{ form.address(class="form-control", rows=3, placeholder="Enter your complete delivery address") }}
+                    {% if form.address.errors %}
+                        <div class="text-danger">
+                            {% for error in form.address.errors %}
+                                <small>{{ error }}</small>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                    <small class="form-text text-muted">We'll use this address to deliver your order and for calculating estimated delivery time.</small>
+                </div>
+                
+                <div class="form-group mb-4">
+                    <label for="phone" class="form-label">Phone Number</label>
+                    {{ form.phone(class="form-control", placeholder="Enter your phone number", value=current_user.phone) }}
+                    {% if form.phone.errors %}
+                        <div class="text-danger">
+                            {% for error in form.phone.errors %}
+                                <small>{{ error }}</small>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                    <small class="form-text text-muted">You'll receive SMS notifications about your order status.</small>
+                </div>
+                
+                <h3 class="mb-3">Payment Method</h3>
+                
+                <div class="form-check mb-3">
+                    <input class="form-check-input" type="radio" name="paymentMethod" id="paymentCOD" checked>
+                    <label class="form-check-label" for="paymentCOD">
+                        Cash on Delivery
+                    </label>
+                </div>
+                
+                <div class="form-check mb-4">
+                    <input class="form-check-input" type="radio" name="paymentMethod" id="paymentCard" disabled>
+                    <label class="form-check-label" for="paymentCard">
+                        Credit/Debit Card (Coming Soon)
+                    </label>
+                </div>
+                
+                {% if coupon_code %}
+                    <div class="alert alert-success mb-4">
+                        <i data-feather="check-circle"></i> Coupon <strong>{{ coupon_code }}</strong> applied successfully!
+                    </div>
+                {% endif %}
+                
+                <div class="d-grid gap-2">
+                    {{ form.submit(class="btn btn-primary btn-lg") }}
+                </div>
+            </form>
+        </div>
+        
+        <!-- Order Summary -->
+        <div class="checkout-summary">
+            <h3 class="mb-3">Order Summary</h3>
+            
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">Items in Cart ({{ cart_items|length }})</h5>
+                    
+                    <div class="order-items">
+                        {% for item in cart_items %}
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <div class="d-flex align-items-center">
+                                    <div class="me-2">{{ item.quantity }}x</div>
+                                    <div>{{ item.product.name }}</div>
+                                </div>
+                                <div>${{ "%.2f"|format(item.total_price()) }}</div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                    
+                    <hr>
+                    
+                    <div class="d-flex justify-content-between mb-2">
+                        <div>Subtotal:</div>
+                        <div>${{ "%.2f"|format(total) }}</div>
+                    </div>
+                    
+                    {% if discount %}
+                        <div class="d-flex justify-content-between mb-2 text-success">
+                            <div>Discount:</div>
+                            <div>-${{ "%.2f"|format(discount) }}</div>
+                        </div>
+                    {% endif %}
+                    
+                    <div class="d-flex justify-content-between mb-2">
+                        <div>Shipping:</div>
+                        <div>Free</div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between fw-bold">
+                        <div>Total:</div>
+                        <div>${{ "%.2f"|format(total - discount) }}</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="checkout-actions">
+                <a href="{{ url_for('view_cart') }}" class="btn btn-outline-secondary">
+                    <i data-feather="arrow-left"></i> Return to Cart
+                </a>
+            </div>
+            
+            <div class="mt-3">
+                <small class="text-muted">
+                    <i data-feather="lock" style="width: 14px; height: 14px;"></i>
+                    Secure Checkout - Your information is encrypted and secure.
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize Feather icons
+        feather.replace();
+    });
+</script>
+{% endblock %}
+{% endblock %}
